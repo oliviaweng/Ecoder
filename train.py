@@ -229,15 +229,21 @@ def build_model(args):
              
         # re-use trained weights 
         if m['ws']=="":
-            if os.path.exists(args.odir+m['name']+"/"+m['name']+".hdf5"):
+            saved_model_filename = m['name'] + '.hdf5'
+            trained_weights_path = os.path.join(
+                args.odir, 
+                m['name'], 
+                saved_model_filename
+            )
+            if os.path.exists(trained_weights_path):
                 if args.retrain:
                     _logger.info('Found weights, but going to re-train as told.')
                     m['ws'] = ""
                 else:
-                    _logger.info('Found weights, using it by default')
-                    m['ws'] = m['name']+".hdf5"
+                    _logger.info(f'Found weights, using it by default: {trained_weights_path}')
+                    m['ws'] = saved_model_filename # Because we change into this file's directory.
             else:
-                _logger.info('Have not found trained weights in dir: %s'%(args.odir+m['name']+"/"+m['name']+".hdf5"))
+                _logger.info(f'Have not found trained weights in dir: {trained_weights_path}')
         else:
             _logger.info('Found user input weights, using %s'%m['ws'])
             
@@ -589,19 +595,19 @@ def main(args):
     
     eval_dict={
         # compare to other algorithms
-        'algnames'    :['ae','stc','thr_lo','thr_hi','bc'],
-        'metrics'     :{'EMD':emd},
-        "occ_nbins"   :12,
-        "occ_range"   :(0,24),
-	"occ_bins"    : [0,2,5,10,15],
-	"chg_nbins"   :20,
-        "chg_range"   :(0,200),
-        "chglog_nbins":20,
-        "chglog_range":(0,2.5),
-        "chg_bins"    :[0,2,5,10,50],
-        "occTitle"    :r"occupancy [1 MIP$_{\mathrm{T}}$ TCs]"       ,
-        "logMaxTitle" :r"log10(Max TC charge/MIP$_{\mathrm{T}}$)",
-	"logTotTitle" :r"log10(Sum of TC charges/MIP$_{\mathrm{T}}$)",
+        'algnames'    : ['ae','stc','thr_lo','thr_hi','bc'],
+        'metrics'     : {'EMD':emd},
+        "occ_nbins"   : 12,
+        "occ_range"   : (0,24),
+	    "occ_bins"    : [0,2,5,10,15],
+	    "chg_nbins"   : 20,
+        "chg_range"   : (0,200),
+        "chglog_nbins": 20,
+        "chglog_range": (0,2.5),
+        "chg_bins"    : [0,2,5,10,50],
+        "occTitle"    : r"occupancy [1 MIP$_{\mathrm{T}}$ TCs]",
+        "logMaxTitle" : r"log10(Max TC charge/MIP$_{\mathrm{T}}$)",
+	    "logTotTitle" : r"log10(Sum of TC charges/MIP$_{\mathrm{T}}$)",
     }
     if args.full:
         eval_dict['metrics'].update({'EMD':emd,
