@@ -385,6 +385,7 @@ def evaluate_model(model,charges,aux_arrs,eval_dict,args):
         }
 
     model_name = model['name']
+    print(f'Evaluating model: {model_name}')
     plots={}
     summary_by_model = {
         'name':model_name,
@@ -418,6 +419,7 @@ def evaluate_model(model,charges,aux_arrs,eval_dict,args):
         for mname, metric in eval_dict['metrics'].items():
             name = mname+"_"+algname
             vals = np.array([metric(input_calQ[i],alg_out[i]) for i in range(0,len(input_Q_abs))])
+            print(f"Avg Metric: {name} = {np.mean(vals)}")
 
             model[name] = np.round(np.mean(vals), 3)
             model[name+'_err'] = np.round(np.std(vals), 3)
@@ -593,7 +595,7 @@ def main(args):
     # evaluate performance
     from utils.metrics import emd,d_weighted_mean,d_abs_weighted_rms,zero_frac,ssd
     
-    eval_dict={
+    eval_dict = {
         # compare to other algorithms
         'algnames'    : ['ae','stc','thr_lo','thr_hi','bc'],
         'metrics'     : {'EMD':emd},
