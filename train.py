@@ -78,6 +78,12 @@ parser.add_argument("--noHeader", action='store_true', default = False,dest="noH
 
 parser.add_argument("--models", type=str, default="8x8_c8_S2_tele", dest="models",
                     help="models to run, if empty string run all")
+parser.add_argument(
+    "--pretrained-model", 
+    type=str, 
+    default="", 
+    help="path to pretrained model .hdf5 file"
+)
 
 @numba.jit
 def normalize(data,rescaleInputToMax=False, sumlog2=True):
@@ -222,12 +228,16 @@ def build_model(args):
     for m in models:
         # print nbits for qkeras
         if m['isQK']:
-             _logger.info('qKeras model weight {total}, {integer}, {keep_negative}'.format(**m['params']['nBits_weight']))
-             _logger.info('qKeras model input {total}, {integer}, {keep_negative}'.format(**m['params']['nBits_input']))
-             _logger.info('qKeras model accum {total}, {integer}, {keep_negative}'.format(**m['params']['nBits_accum']))
-             _logger.info('qKeras model encod {total}, {integer}, {keep_negative}'.format(**m['params']['nBits_encod']))
+            m['params']['nBits_input'] = nBits_input
+            m['params']['nBits_accum'] = nBits_accum
+            m['params']['nBits_weight'] = nBits_weight
+            _logger.info('qKeras model weight {total}, {integer}, {keep_negative}'.format(**m['params']['nBits_weight']))
+            _logger.info('qKeras model input {total}, {integer}, {keep_negative}'.format(**m['params']['nBits_input']))
+            _logger.info('qKeras model accum {total}, {integer}, {keep_negative}'.format(**m['params']['nBits_accum']))
+            _logger.info('qKeras model encod {total}, {integer}, {keep_negative}'.format(**m['params']['nBits_encod']))
              
         # re-use trained weights 
+        m['ws'] = args.pretrained_model
         if m['ws']=="":
             saved_model_filename = m['name'] + '.hdf5'
             trained_weights_path = os.path.join(
@@ -340,13 +350,13 @@ def evaluate_model(model,charges,aux_arrs,eval_dict,args):
     occupancy_1MT = aux_arrs['occupancy_1MT']
 
     # visualize 2D activations
-    if not model['isQK']:
-        conv2d  = None
-    else:
-        conv2d = kr.models.Model(
-            inputs =model['m_autoCNNen'].inputs,
-            outputs=model['m_autoCNNen'].get_layer("conv2d_0_m").output
-        )
+    # if not model['isQK']:
+    #     conv2d  = None
+    # else:
+    #     conv2d = kr.models.Model(
+    #         inputs =model['m_autoCNNen'].inputs,
+    #         outputs=model['m_autoCNNen'].get_layer("conv2d_0_m").output
+    #     )
 
     occ_nbins = eval_dict['occ_nbins']
     occ_range = eval_dict['occ_range']
@@ -411,10 +421,10 @@ def evaluate_model(model,charges,aux_arrs,eval_dict,args):
     # compute metric for each algorithm
     for algname, alg_out in alg_outs.items():
         # event displays
-        if(not args.skipPlot):
-            Nevents = 8
-            index = np.random.choice(input_Q.shape[0], Nevents, replace=False)
-            visualize_displays(index, input_Q, input_calQ, alg_out, (cnn_enQ if algname=='ae' else np.array([])),(conv2d if algname=='ae' else None), name=algname)
+        # if(not args.skipPlot):
+        #     Nevents = 8
+        #     index = np.random.choice(input_Q.shape[0], Nevents, replace=False)
+        #     visualize_displays(index, input_Q, input_calQ, alg_out, (cnn_enQ if algname=='ae' else np.array([])),(conv2d if algname=='ae' else None), name=algname)
 
         for mname, metric in eval_dict['metrics'].items():
             name = mname+"_"+algname
