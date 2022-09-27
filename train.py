@@ -308,13 +308,17 @@ def train(autoencoder,encoder,train_input,train_target,val_input,name,n_epochs=1
         json_string = autoencoder.to_json()
         encoder = autoencoder.get_layer("encoder")
         decoder = autoencoder.get_layer("decoder")
-        with open('./%s.json'%name,'w') as f:        f.write(autoencoder.to_json())
-        with open('./%s.json'%("encoder_"+name),'w') as f:            f.write(encoder.to_json())
-        with open('./%s.json'%("decoder_"+name),'w') as f:            f.write(decoder.to_json())
+        with open('./%s.json'%name,'w') as f:
+            f.write(autoencoder.to_json())
+        with open('./%s.json'%("encoder_"+name),'w') as f:
+            f.write(encoder.to_json())
+        with open('./%s.json'%("decoder_"+name),'w') as f:
+            f.write(decoder.to_json())
         autoencoder.save_weights('%s.hdf5'%name)
         encoder.save_weights('%s.hdf5'%("encoder_"+name))
         decoder.save_weights('%s.hdf5'%("decoder_"+name))
         if isQK:
+            print("\n\n\nSave quantized weights!\n\n\n")
             encoder_qWeight = model_save_quantized_weights(encoder)
             with open('encoder_'+name+'.pkl','wb') as f:
                 pickle.dump(encoder_qWeight,f)
