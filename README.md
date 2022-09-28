@@ -33,7 +33,10 @@ scp -r cmslpc-sl7.fnal.gov:/uscms/home/kkwok/eos/ecoder/V11/ data/
 
 or ~~from cernbox: https://cernbox.cern.ch/index.php/s/YpAWu24aw6EaBk7~~ **Outdated!**
 
-Latest dataset: [Available here](https://emdhgcalae.nrp-nautilus.io/ttbar/data/HGCal22Data_signal_driven_ttbar_v11/)
+Latest datasets: 
+
+* [End-of-life Data](https://emdhgcalae.nrp-nautilus.io/ttbar/data/HGCal22Data_signal_driven_ttbar_v11/)
+* [Beginning-of-life Data](https://emdhgcalae.nrp-nautilus.io/EleGun/EPGun-PU200/data/)
 
 Electron samples: (neLinks 2-5 with sim-Energy information) `/eos/uscms/store/user/dnoonan/AE_TrainingData/NewData/Skim/ele200PUData_TrainingData_SignalAllocation/`
 
