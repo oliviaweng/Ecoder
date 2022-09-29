@@ -2,6 +2,8 @@ import tensorflow as tf
 import tensorflow.keras as kr
 from tensorflow.keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D, Flatten, \
     Conv2DTranspose, Reshape, Activation
+from fkeras.fdense import FQDense
+from fkeras.fconvolutional import FQConv2D
 from tensorflow.keras.models import Model
 from tensorflow.keras import backend as K
 import qkeras as qkr
@@ -44,6 +46,8 @@ def sinkhorn_loss(y_true, y_pred):
     return K.mean( tf.map_fn(myfunc, cc), axis=(-1) )
 
 from denseCNN import denseCNN
+
+LAYER_BER = 0.0
 
 class qDenseCNN(denseCNN):
     def __init__(self, name='', weights_f=''):
@@ -114,12 +118,28 @@ class qDenseCNN(denseCNN):
         x = QActivation(input_Qbits, name='input_qa')(x)
         for i, n_nodes in enumerate(CNN_layer_nodes):
             if channels_first:
-                x = QConv2D(n_nodes, CNN_kernel_size[i], padding=CNN_padding[i],
-                            data_format='channels_first', name="conv2d_"+str(i)+"_m", strides = CNN_strides[i],
-                            kernel_quantizer=conv_Qbits, bias_quantizer=conv_Qbits)(x)
+                x = FQConv2D(
+                    n_nodes, 
+                    CNN_kernel_size[i], 
+                    padding=CNN_padding[i],
+                    data_format='channels_first', 
+                    name="conv2d_"+str(i)+"_m", 
+                    strides=CNN_strides[i],
+                    kernel_quantizer=conv_Qbits, 
+                    bias_quantizer=conv_Qbits,
+                    ber=LAYER_BER,
+                )(x)
             else:
-                x = QConv2D(n_nodes, CNN_kernel_size[i], padding=CNN_padding[i], name="conv2d_"+str(i)+"_m", strides = CNN_strides[i],
-                            kernel_quantizer=conv_Qbits, bias_quantizer=conv_Qbits)(x)
+                x = FQConv2D(
+                    n_nodes, 
+                    CNN_kernel_size[i], 
+                    padding=CNN_padding[i], 
+                    name="conv2d_"+str(i)+"_m", 
+                    strides=CNN_strides[i],
+                    kernel_quantizer=conv_Qbits, 
+                    bias_quantizer=conv_Qbits,
+                    ber=LAYER_BER,
+                )(x)
             if CNN_pool[i]:
                 if channels_first:
                     x = MaxPooling2D((2, 2), padding='same', data_format='channels_first', name="mp_"+str(i))(x)
@@ -141,14 +161,24 @@ class qDenseCNN(denseCNN):
 
         # encoder dense nodes
         for i, n_nodes in enumerate(Dense_layer_nodes):
-            x = QDense(n_nodes,  name="en_dense_"+str(i),
-                           kernel_quantizer=dense_Qbits, bias_quantizer=dense_Qbits)(x)
+            x = FQDense(
+                n_nodes,  
+                name="en_dense_"+str(i),
+                kernel_quantizer=dense_Qbits, 
+                bias_quantizer=dense_Qbits,
+                ber=LAYER_BER,
+            )(x)
 
 
         #x = QDense(encoded_dim, activation='relu', name='encoded_vector',
         #                      kernel_quantizer=dense_Qbits, bias_quantizer=dense_Qbits)(x)
-        x = QDense(encoded_dim, name='encoded_vector',
-                              kernel_quantizer=dense_Qbits, bias_quantizer=dense_Qbits)(x)
+        x = FQDense(
+            encoded_dim, 
+            name='encoded_vector',
+            kernel_quantizer=dense_Qbits, 
+            bias_quantizer=dense_Qbits,
+            ber=LAYER_BER,
+        )(x)
         encodedLayer = QActivation(qa_encod, name='encod_qa')(x)
 
         # Instantiate Encoder Model

@@ -12,6 +12,9 @@ from tensorflow.keras import losses
 from qkeras import get_quantizer,QActivation
 from qkeras.utils import model_save_quantized_weights
 
+from fkeras.fdense import FQDense
+from fkeras.fconvolutional import FQConv2D
+
 from qDenseCNN import qDenseCNN
 from denseCNN import denseCNN
 from dense2DkernelCNN import dense2DkernelCNN
@@ -204,7 +207,9 @@ def build_model(args):
         models = [n for n in networks_by_name if n['name'] in m_to_run]
     else:
         models = networks_by_name
-        
+    
+    print(f"Selected models: {models}")
+
     nBits_encod = dict()
     if(args.nElinks==2):
         nBits_encod  = {'total':  3, 'integer': 1,'keep_negative':0}
@@ -317,20 +322,23 @@ def train(autoencoder,encoder,train_input,train_target,val_input,name,n_epochs=1
         autoencoder.save_weights('%s.hdf5'%name)
         encoder.save_weights('%s.hdf5'%("encoder_"+name))
         decoder.save_weights('%s.hdf5'%("decoder_"+name))
-        if isQK:
-            print("\n\n\nSave quantized weights!\n\n\n")
-            encoder_qWeight = model_save_quantized_weights(encoder)
-            with open('encoder_'+name+'.pkl','wb') as f:
-                pickle.dump(encoder_qWeight,f)
-            encoder = graph.set_quantized_weights(encoder,'encoder_'+name+'.pkl')
-        graph.write_frozen_graph(encoder,'encoder_'+name+'.pb')
-        graph.write_frozen_graph(encoder,'encoder_'+name+'.pb.ascii','./',True)
-        graph.write_frozen_graph(decoder,'decoder_'+name+'.pb')
-        graph.write_frozen_graph(decoder,'decoder_'+name+'.pb.ascii','./',True)
+        # TODO: Need to fork QKeras and fix model_save_quantized_weights bug
+        # noted below.
+        # if isQK: print("\n\n\nSave quantized weights!\n\n\n") #
+        #     TODO: Errors out here. Need to fix  model_save_quantized_weights()
+        #     # so that it accepts custom objects. encoder_qWeight =
+        #     model_save_quantized_weights(encoder) with
+        #     open('encoder_'+name+'.pkl','wb') as f:
+        #     pickle.dump(encoder_qWeight,f) encoder =
+        #         graph.set_quantized_weights(encoder,'encoder_'+name+'.pkl')
+        #     graph.write_frozen_graph(encoder,'encoder_'+name+'.pb')
+        # graph.write_frozen_graph(encoder,'encoder_'+name+'.pb.ascii','./',True)
+        # graph.write_frozen_graph(decoder,'decoder_'+name+'.pb')
+        # graph.write_frozen_graph(decoder,'decoder_'+name+'.pb.ascii','./',True)
         
-        graph.plot_weights(autoencoder)
-        graph.plot_weights(encoder)
-        graph.plot_weights(decoder)
+        # graph.plot_weights(autoencoder)
+        # graph.plot_weights(encoder)
+        # graph.plot_weights(decoder)
     
     save_models(autoencoder,name,isQK)
 
@@ -605,6 +613,7 @@ def main(args):
 
     # build default AE models
     models = build_model(args)
+    print(f"Models = {models}")
     
     # evaluate performance
     from utils.metrics import emd,d_weighted_mean,d_abs_weighted_rms,zero_frac,ssd
@@ -678,14 +687,14 @@ def main(args):
 
         shaped_data = m.prepInput(normdata)
 
-        # split in training/validation datasets
         if args.evalOnly:
             _logger.info("Eval only")
             val_input = shaped_data
             val_ind = np.array(range(len(shaped_data)))
-            train_input = val_input[:0] #empty with correct shape                                                                                                                                           
+            train_input = val_input[:0] #empty with correct shape 
             train_ind = val_ind[:0]
         else:
+            # split in training/validation datasets
             val_input, train_input, val_ind, train_ind = split(shaped_data)
             
         m_autoCNN , m_autoCNNen = m.get_models()
@@ -716,6 +725,7 @@ def main(args):
                                 n_epochs = args.epochs,
                                 train_weights=train_weights)
             else:
+                print('Training from scratch')
                 history = train(m_autoCNN,m_autoCNNen,
                                 train_input,train_input,val_input,
                                 name=model_name,
@@ -732,6 +742,13 @@ def main(args):
 
         # evaluate model
         _logger.info('Evaluate AutoEncoder, model %s'%model_name)
+        eval_ber = 0.0
+        print(m_autoCNNen.summary())
+        for layer in m_autoCNNen.layers:
+            if type(layer) == FQDense or type(layer) == FQConv2D:
+                layer.set_ber(eval_ber)
+                print(f"Setting Encoder layer {layer} ber = {eval_ber}")
+
         input_Q, cnn_deQ, cnn_enQ = m.predict(val_input)
         
         input_calQ  = m.mapToCalQ(input_Q)   # shape = (N,48) in CALQ order

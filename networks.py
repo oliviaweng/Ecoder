@@ -169,7 +169,7 @@ networks_by_name = [
         },
     },
 
-    {'name':'8x8_c8_S2_tele_quantized',
+    {'name':'8x8_c8_S2_tele_quantized_fkeras',
      'label':'8x8_c[8]_S2(tele)',
      'arr_key':'8x8',
      'isQK': True, 

@@ -114,6 +114,8 @@ def visualize_metric(input_Q,decoded_Q,metric,name,odir,skipPlot=False):
     return
 
 def overlay_plots(results, name, xtitle="",ytitle="Entries",odir='.',text="",ylim=None):
+    print("overlay_plots")
+    print(f"results: {results}")
     centers = results[0][1][0]
     wid = centers[1]-centers[0]
     offset = 0.33*wid
