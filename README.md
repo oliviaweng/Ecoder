@@ -33,7 +33,10 @@ scp -r cmslpc-sl7.fnal.gov:/uscms/home/kkwok/eos/ecoder/V11/ data/
 
 or ~~from cernbox: https://cernbox.cern.ch/index.php/s/YpAWu24aw6EaBk7~~ **Outdated!**
 
-Latest dataset: [Available here](https://emdhgcalae.nrp-nautilus.io/ttbar/data/HGCal22Data_signal_driven_ttbar_v11/)
+Latest datasets: 
+
+* [End-of-life Data](https://emdhgcalae.nrp-nautilus.io/ttbar/data/HGCal22Data_signal_driven_ttbar_v11/)
+* [Beginning-of-life Data](https://emdhgcalae.nrp-nautilus.io/EleGun/EPGun-PU200/data/)
 
 Electron samples: (neLinks 2-5 with sim-Energy information) `/eos/uscms/store/user/dnoonan/AE_TrainingData/NewData/Skim/ele200PUData_TrainingData_SignalAllocation/`
 
@@ -57,20 +60,20 @@ Furthermore:
 The default model uses the telescope loss, we can compare the performance of the autoencoder with the emd_loss's as such:
 
 ```
-python3 train.py -i data/V11/SampleSplitting_SignalAllocation/nElinks_5/shuffled/  -o ./comp_all/ --epoch 1 --AEonly 1 --nELinks 5 --noHeader --models 8x8_c8_S2_tele,8x8_c8_S2_ae_emdCNN
+ python3 train.py -i <PATH_TO_DATA_DIR>/hgcal22data_signal_driven_ttbar_v11/nElinks_5/ -o <OUTPUT_DIR> --epoch 100 --AEonly 1 --nELinks 5 --models 8x8_c8_S2_tele --nrowsPerFile=4000000 --noHeader
 ```
 
 here:
-- `-i data/V11/SampleSplitting_SignalAllocation/nElinks_5/shuffled/`: Input directory or input file. Here we have an example of the input training. In this case the .csv files are already shuffled and they do not contain headers. So the `--noHeader` option is needed.
-- `-o ./test/`: Output directory. Here we have `test` as an example of the output directory. Change this to something more meaninful for future tests.
+- `-i <PATH_TO_DATA_DIR>/hgcal22data_signal_driven_ttbar_v11/nElinks_5/`: Input directory or input file. Here we have an example of the input training. In this case the .csv files are already shuffled and they do not contain headers. So the `--noHeader` option is needed.
+- `-o <OUTPUT_DIR>`: Output directory. Change this to something more meaninful for future tests.
 - `--epoch 1`: this represents the number of epochs to train the model. We usually train for ~100 epochs.
 - `--AEonly`: is an argument to only evaluate the AutoEncoder algorithm (instead of also the other algorithms such as BSC,STC,Threshold..). This is usually an option that we want to include in this stage
 - `--nElinks`: this is the number of active elinks for the input dataset (in this case 5 for the signal allocation algorithm.) Find more about the number of elinks and allocation [here](https://github.com/cmantill/ECONAutoencoderStudy/blob/master/fragments/README.MD#number-of-elinks).
 - `--noHeader`: this argument is needed only for this shuffled dataset since it has no header. Other datasets (e.g. for SingleElectron) will contain headers.
+- `--models 8x8_c8_S2_tele`: Name of model to run.
 
 Other possible arguments are:
 - `--loss`: if there is a default loss function to use. We generalize want to use `telescopeMSE8x8` that is defined [here](https://github.com/cmantill/Ecoder/blob/master/telescope.py#L168-L170) and called [here](https://github.com/cmantill/Ecoder/blob/master/networks.py#L4). So we usually want to leave this argument empty.
-- `--quantize`: Quantize the model with qKeras.
 - `--skipPlot`: Skip the plotting steps.
 - `--full`: Run all the algorithms and metrics.
 - `--quickTrain`: Train with only 5k events for testing purposes.
