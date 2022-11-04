@@ -36,7 +36,7 @@ or ~~from cernbox: https://cernbox.cern.ch/index.php/s/YpAWu24aw6EaBk7~~ **Outda
 Latest datasets: 
 
 * [End-of-life Data](https://emdhgcalae.nrp-nautilus.io/ttbar/data/HGCal22Data_signal_driven_ttbar_v11/)
-* [Beginning-of-life Data](https://emdhgcalae.nrp-nautilus.io/EleGun/EPGun-PU200/data/)
+* [Beginning-of-life Data](https://emdhgcalae.nrp-nautilus.io/EleGun/low_pt_high_eta/data/nElinks_5/)
 
 Electron samples: (neLinks 2-5 with sim-Energy information) `/eos/uscms/store/user/dnoonan/AE_TrainingData/NewData/Skim/ele200PUData_TrainingData_SignalAllocation/`
 
