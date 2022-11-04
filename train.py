@@ -87,6 +87,12 @@ parser.add_argument(
     default="", 
     help="path to pretrained model .hdf5 file"
 )
+parser.add_argument(
+    "--eval-ber",
+    type=float,
+    default=0,
+    help="Bit error rate during model evaluation"
+)
 
 @numba.jit
 def normalize(data,rescaleInputToMax=False, sumlog2=True):
@@ -208,8 +214,6 @@ def build_model(args):
     else:
         models = networks_by_name
     
-    print(f"Selected models: {models}")
-
     nBits_encod = dict()
     if(args.nElinks==2):
         nBits_encod  = {'total':  3, 'integer': 1,'keep_negative':0}
@@ -441,7 +445,7 @@ def evaluate_model(model,charges,aux_arrs,eval_dict,args):
         for mname, metric in eval_dict['metrics'].items():
             name = mname+"_"+algname
             vals = np.array([metric(input_calQ[i],alg_out[i]) for i in range(0,len(input_Q_abs))])
-            print(f"Avg Metric: {name} = {np.mean(vals)}")
+            print(f"Eval ber {args.eval_ber} avg metric: {name} = {np.mean(vals)}")
 
             model[name] = np.round(np.mean(vals), 3)
             model[name+'_err'] = np.round(np.std(vals), 3)
@@ -613,7 +617,6 @@ def main(args):
 
     # build default AE models
     models = build_model(args)
-    print(f"Models = {models}")
     
     # evaluate performance
     from utils.metrics import emd,d_weighted_mean,d_abs_weighted_rms,zero_frac,ssd
@@ -742,7 +745,7 @@ def main(args):
 
         # evaluate model
         _logger.info('Evaluate AutoEncoder, model %s'%model_name)
-        eval_ber = 0.0
+        eval_ber = args.eval_ber
         print(m_autoCNNen.summary())
         for layer in m_autoCNNen.layers:
             if type(layer) == FQDense or type(layer) == FQConv2D:
